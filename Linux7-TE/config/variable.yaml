@@ -1,0 +1,7 @@
+shared:
+    box: ol7-latest
+    url: https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box
+
+env:
+    name: Terraform
+    hostname: TE

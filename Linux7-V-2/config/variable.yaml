@@ -1,0 +1,7 @@
+shared:
+    box: ol7-latest
+    url: https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box
+
+env:
+    name: Vault-2
+    hostname: vault-2

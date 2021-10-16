@@ -1,0 +1,24 @@
+## add nodelist if RAC DB
+responseFileVersion=/oracle/assistants/rspfmt_dbca_response_schema_v19.0.0
+gdbName=###ORACLE_NAME###
+sid=###ORACLE_SID###
+databaseConfigType=###ORACLE_TYPE###
+nodelist=###NODE_LIST###
+createAsContainerDatabase=###CDBBOOLEN###
+templateName=General_Purpose.dbc
+numberOfPDBs=###PDBNUMBER###
+pdbName=###PDB_NAME###
+useLocalUndoForPDBs=false
+pdbAdminPassword=###ORACLE_PWD###
+sysPassword=###ORACLE_PWD###
+systemPassword=###ORACLE_PWD###
+emExpressPort=5500
+dbsnmpPassword=###ORACLE_PWD###
+datafileDestination=###DATA_DIR###
+recoveryAreaDestination=###FRA_DIR###
+storageType=###STORAGETYPE###
+characterSet=AL32UTF8
+databaseType=MULTIPURPOSE
+automaticMemoryManagement=false
+totalMemory=15362
+initParams=enable_goldengate_replication=true,DBFIPS_140=true,streams_pool_size=500M,wallet_root=###WALLET_ROOT###,tde_configuration="KEYSTORE_CONFIGURATION=FILE",audit_sys_operations=TRUE,audit_trail='xml',global_names=TRUE,resource_limit=TRUE,sql92_security=TRUE,os_roles=FALSE,remote_login_passwordfile='EXCLUSIVE',remote_os_authent=FALSE,sec_protocol_error_trace_action=TRACE,sec_return_server_release_banner=FALSE,SEC_MAX_FAILED_LOGIN_ATTEMPTS=3,sec_protocol_error_further_action=(DROP 3),remote_os_roles=FALSE,O7_DICTIONARY_ACCESSIBILITY=FALSE,utl_file_dir='',"_grant_secure_role"=TRUE,os_authent_prefix='', open_cursors=300, db_block_checking=true, db_block_checksum='typical',sec_case_sensitive_logon=true

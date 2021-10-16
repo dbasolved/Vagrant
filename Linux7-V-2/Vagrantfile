@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Require YAML module
+require 'yaml'
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variable.yaml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_box_url           = params['shared']['url']
+
+# Environment
+var_name              = params['env']['name']
+var_host_name         = params['env']['hostname']
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.network "private_network", ip: "172.28.128.111"
+
+  config.vm.define "oel7-v2" do |j|
+      j.vm.box = var_box_image
+      j.vm.box_url = var_box_url
+      j.vm.hostname = var_name
+
+      #Config Triggers
+      j.trigger.before :up do |trigger|
+        trigger.name = "***** Starting Message 1 *****"
+        trigger.info = "#{j.vm.hostname} is coming up!"
+      end
+      
+      j.trigger.after :up do |trigger|
+        trigger.name = "***** Starting Message 2 *****"
+        trigger.info = "#{j.vm.hostname} is up!"
+      end
+      
+      j.trigger.before :halt do |trigger|
+        trigger.name = "***** Halting Message 1 *****"
+        trigger.info = "#{j.vm.hostname} is coming down!"
+      end
+      
+      j.trigger.after :halt do |trigger|
+        trigger.name = "***** Halting Message 2 *****"
+        trigger.info = "#{j.vm.hostname} is down!"
+      end
+      
+      j.trigger.before :destory do |trigger|
+        trigger.name = "***** Destory Message 1 *****"
+        trigger.info = "#{j.vm.hostname} is being destoryed!"
+      end
+      
+      j.trigger.after :destroy do |trigger|
+        trigger.name = "***** Destory Message 2 ******"
+        trigger.info = "#{j.vm.hostname} has been destoryed!"
+      end
+      
+      j.vm.provider "virtualbox" do |v|
+
+        v.customize [ "modifyvm", :id, "--memory", 1024 ]
+        v.customize [ "modifyvm", :id, "--cpus", 1 ]
+        v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+        v.customize [ "modifyvm", :id, "--name", var_name ]
+    
+      j.vm.hostname = var_host_name
+      j.vm.network "forwarded_port", guest: 8081, host: 8081
+      j.vm.network "forwarded_port", guest: 1521, host: 1522
+      j.vm.network "forwarded_port", guest: 8201, host: 8201
+
+      # Enable ssh password authentication
+      j.vm.provision "shell", inline: <<-SHELL
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+          /bin/systemctl restart sshd
+        SHELL
+
+      j.vm.provision "provision_db", type: "shell", path: "scripts/install.sh"
+
+      j.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+
+      #end
+    end
+  end
+end

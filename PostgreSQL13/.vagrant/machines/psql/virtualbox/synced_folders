@@ -1,0 +1,1 @@
+{"virtualbox":{"/Test_Software":{"guestpath":"/Test_Software","hostpath":"/Users/bocurtis/Downloads","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/bocurtis/Dropbox/Repositories/Vagrant/PostgreSQL13","disabled":false,"__vagrantfile":true}}}

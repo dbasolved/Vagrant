@@ -1,0 +1,97 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+BOX_IMAGE = "ol7-latest"
+BOX_URL = "https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box"
+
+# Name of the VM and the hostname inside
+NAME1 = "DB19C"
+NAME2 = "OGG19C"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.network "private_network", type: "dhcp"
+
+  config.vm.define "db" do |db|
+      db.vm.box = BOX_IMAGE
+      db.vm.box_url = BOX_URL
+      db.vm.hostname = NAME1
+      
+      db.vm.provider "virtualbox" do |v|
+        v.customize [ "modifyvm", :id, "--memory", 2048 ]
+        v.customize [ "modifyvm", :id, "--cpus", 2 ]
+        v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+        v.customize [ "modifyvm", :id, "--name", NAME1 ]
+    
+        db.vm.hostname = "db19c"
+        db.vm.network "forwarded_port", guest: 1539, host: 15391
+        db.vm.network "forwarded_port", guest: 5500, host: 55001
+        db.vm.network "forwarded_port", guest: 5901, host: 59011
+
+        db.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+        db.vm.provision "provision_db", type: "shell", path: "scripts/DBinstall.sh", env:
+        {
+          "DB_SHIPHOME"           => "LINUX.X64_193000_db_home.zip",
+          "ORA_INVENTORY"		      => "/opt/app/oraInventory",
+          "ORACLE_BASE" 		      => "/opt/app/oracle",
+          "ORACLE_HOME" 		      => "/opt/app/oracle/product/19.3.0/dbhome_1",
+          "ORACLE_SID"  		      => "orcl",
+          "PDB_NAME"              => "oggtst",
+          "ORACLE_CHARACTERSET"  	=> "AL32UTF8",
+          "ORACLE_EDITION" 	      => "EE",
+          "ORACLE_PWD"            => "Welcome1",
+          "DB_VERSION"            => "ORA19c"
+        }
+
+        db.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+      end
+  end
+  
+  config.vm.define "gg" do |gg|
+        gg.vm.box = BOX_IMAGE
+        gg.vm.box_url = BOX_URL
+        gg.vm.hostname = NAME2
+        
+      # VM Customization
+        gg.vm.provider "virtualbox" do |v|
+            v.customize [ "modifyvm", :id, "--memory", 1024 ]
+            v.customize [ "modifyvm", :id, "--cpus", 2 ]
+            v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+            v.customize [ "modifyvm", :id, "--name", NAME2 ]
+
+        # Oracle port forwarding
+        gg.vm.hostname = "gg19c"
+        gg.vm.network "forwarded_port", guest: 1539, host: 15392
+        gg.vm.network "forwarded_port", guest: 5901, host: 59012
+        gg.vm.network "forwarded_port", guest: 443, host: 443
+
+        gg.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+        gg.vm.provision "provision_gg", type: "shell", path: "scripts/GGinstall.sh", env:
+        {
+          "OGG_SHIPHOME"          => "191004_fbo_ggs_Linux_x64_services_shiphome.zip",
+          #"CLIENT_SHIPHOME_18C"   => "instantclient-basic-linux.x64-18.5.0.0.0dbru.zip",
+          #"CLIENT_SHIPHOME_19C"   => "instantclient-basic-linux.x64-19.6.0.0.0dbru.zip",
+          "ORA_INVENTORY"		      => "/usr/lib/oraInventory",
+          "ORACLE_BASE" 		      => "/usr/lib/oracle",
+          "ORACLE_HOME"           => "/usr/lib/oracle/19.8/client64",
+          #"ORACLE_HOME_18C" 		  => "/opt/app/oracle/product/18.1.0/client_1",
+          #"ORACLE_HOME_19C" 		  => "/opt/app/oracle/product/19.1.0/client_1",
+          #"ORACLE_HOME_18C_LIB"   => "/opt/app/oracle/product/18.1.0/client_1/lib",
+          #"ORACLE_HOME_19C_LIB"   => "/opt/app/oracle/product/19.1.0/client_1/lib",
+          "TNS_ADMIN"             => "/usr/lib/oracle/19.8/client64/lib/network/admin",
+          "OGG_HOME" 		          => "/opt/app/oracle/product/19.1.0/oggcore_1",
+          "DEPLOYMENT_BASE" 	    => "/opt/app/oracle/gg_deployments",
+          "JAVA_HOME"             => "/opt/app/oracle/product/19.1.0/oggcore_1/jdk",
+          "ORACLE_PWD"            => "Welcome1",
+          "DB_VERSION"            => "ORA19c"
+        }
+
+        gg.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+    end
+  end
+end

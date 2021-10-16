@@ -1,0 +1,4 @@
+oracle.install.responseFileVersion=/oracle/install/rspfmt_ogginstall_response_schema_v19_1_0
+INSTALL_OPTION=ORA19c
+SOFTWARE_LOCATION=/opt/app/oracle/product/19.1.0/oggcore_1
+UNIX_GROUP_NAME=oinstall

@@ -1,0 +1,120 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+# requires plugin vagrant-auto_network for private_networks to work.
+
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variable.yaml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_box_url           = params['shared']['url']
+
+# Database Environment
+var_db_name           = params['db_env']['name']
+var_host_name         = params['db_env']['hostname']
+var_db_shiphome       = params['db_env']['db_shiphome']
+var_ora_inventory     = params['db_env']['ora_inventory']
+var_oracle_base       = params['db_env']['oracle_base']
+var_oracle_home       = params['db_env']['oracle_home']
+var_oracle_sid        = params['db_env']['oracle_sid']
+var_pdb_name          = params['db_env']['pdb_name']
+var_oracle_char       = params['db_env']['oracle_characterset']
+var_oracle_edition    = params['db_env']['oracle_edition']
+var_oracle_password   = params['db_env']['oracle_pwd']
+var_db_version        = params['db_env']['db_version']
+
+# GoldenGate Environment
+var_gg_name              = params['gg_env']['name']
+
+#-----------------------------------------
+# Check Variables
+#-----------------------------------------
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+      config.vm.define "db" do |db|
+        db.vm.network "private_network", :auto_network => true
+        db.vm.box = var_box_image
+        db.vm.box_url = var_box_url
+        db.vm.hostname = var_db_name
+        
+        db.vm.provider "virtualbox" do |v|
+          v.customize [ "modifyvm", :id, "--memory", 2048 ]
+          v.customize [ "modifyvm", :id, "--cpus", 2 ]
+          v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+          v.customize [ "modifyvm", :id, "--name", var_db_name ]
+      
+        db.vm.hostname = var_host_name
+        db.vm.network "forwarded_port", guest: 1539, host: 15391
+        db.vm.network "forwarded_port", guest: 5500, host: 55001
+        db.vm.network "forwarded_port", guest: 5901, host: 59011
+
+        db.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+        # Enable ssh password authentication
+        db.vm.provision "shell", inline: <<-SHELL
+            sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+            /bin/systemctl restart sshd
+          SHELL
+
+        db.vm.provision "provision_db", type: "shell", path: "scripts/DBinstall.sh", env:
+        {
+            "DB_SHIPHOME"           => var_db_shiphome,
+            "ORA_INVENTORY"		      => var_ora_inventory,
+            "ORACLE_BASE" 		      => var_oracle_base,
+            "ORACLE_HOME" 		      => var_oracle_home,
+            "ORACLE_SID"  		      => var_oracle_sid,
+            "PDB_NAME"              => var_pdb_name,
+            "ORACLE_CHARACTERSET"  	=> var_oracle_char,
+            "ORACLE_EDITION" 	      => var_oracle_edition,
+            "ORACLE_PWD"            => var_oracle_password,
+            "DB_VERSION"            => var_db_version
+        }
+
+        db.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+      end
+    end # End Database Config
+
+    config.vm.define "gg" do |gg|
+        gg.vm.network "private_network", :auto_network => true
+        gg.vm.box = var_box_image
+        gg.vm.box_url = var_box_url
+        gg.vm.hostname = var_gg_name
+        
+        # VM Customization
+        gg.vm.provider "virtualbox" do |v|
+          v.customize [ "modifyvm", :id, "--memory", 1024 ]
+          v.customize [ "modifyvm", :id, "--cpus", 2 ]
+          v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+          v.customize [ "modifyvm", :id, "--name", var_gg_name ]
+
+        # Oracle port forwarding
+        gg.vm.hostname = var_gg_name
+        gg.vm.network "forwarded_port", guest: 1539, host: 15392
+        gg.vm.network "forwarded_port", guest: 5901, host: 59012
+        gg.vm.network "forwarded_port", guest: 443, host: 443
+
+        gg.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+      # Enable ssh password authentication
+        gg.vm.provision "shell", inline: <<-SHELL
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+          /bin/systemctl restart sshd
+          SHELL
+    end
+
+    config.vm.provision "ansible" do |ansible|
+        ansible.playbook = "../Playbooks/gg19c_softwareinstall.yaml"
+    end
+  end
+end
+

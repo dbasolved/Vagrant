@@ -1,0 +1,60 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+require 'yaml'
+
+VAGRANTFILE_API_VERSION = "2"
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variables.yaml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_box_url           = params['shared']['url']
+
+# Environment
+var_name              = params['env']['name']
+
+#-----------------------------------------
+# Check Variables
+#-----------------------------------------
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+    config.vm.define "gg" do |gg|
+        gg.vm.box = var_box_image
+        gg.vm.box_url = var_box_url
+        gg.vm.hostname = var_name
+        
+        # VM Customization
+        gg.vm.provider "virtualbox" do |v|
+          v.customize [ "modifyvm", :id, "--memory", 1024 ]
+          v.customize [ "modifyvm", :id, "--cpus", 2 ]
+          v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+          v.customize [ "modifyvm", :id, "--name", var_name ]
+
+        # Oracle port forwarding
+        gg.vm.hostname = var_name
+        gg.vm.network "forwarded_port", guest: 1539, host: 15392
+        gg.vm.network "forwarded_port", guest: 5901, host: 59012
+        gg.vm.network "forwarded_port", guest: 443, host: 443
+
+        gg.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+    end
+
+    # Enable ssh password authentication
+    config.vm.provision "shell", inline: <<-SHELL
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+          /bin/systemctl restart sshd
+          SHELL
+
+    config.vm.provision "ansible" do |ansible|
+          ansible.playbook = "../Playbooks/gg19c_softwareinstall.yaml"
+    end
+
+  end
+end

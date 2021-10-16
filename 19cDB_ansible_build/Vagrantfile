@@ -1,0 +1,49 @@
+# vi: set ft=ruby :
+require 'yaml'
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variables.yaml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_box_url           = params['shared']['url']
+
+# Environment
+var_name              = params['env']['name']
+
+#-----------------------------------------
+# Check Variables
+#-----------------------------------------
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.network "private_network", :auto_network => true
+  config.vm.box = var_box_image
+  config.vm.box_url = var_box_url
+  config.vm.hostname = var_name
+
+  config.vm.provider "virtualbox" do |v|
+    v.name=var_name
+    v.memory = 1024
+    v.cpus = 2
+  end
+
+  # Enable ssh password authentication
+  config.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+      /bin/systemctl restart sshd
+      SHELL
+
+  config.vm.provision "ansible" do |ansible|
+      ansible.playbook = "../Playbooks/DoS/db19c_softwareinstall.yaml"
+  end
+end

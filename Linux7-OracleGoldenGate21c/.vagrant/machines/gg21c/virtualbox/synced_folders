@@ -1,0 +1,1 @@
+{"virtualbox":{"/Test_Software":{"guestpath":"/Test_Software","hostpath":"/Users/bocurtis/Build_Software/zip_files","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"/Users/bocurtis/Dropbox/Repositories/Vagrant/Linux7-OracleGoldenGate21c","disabled":false,"__vagrantfile":true}}}

@@ -1,0 +1,69 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Require YAML module
+require 'yaml'
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variable.yml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_box_url           = params['shared']['url']
+
+# Environment
+var_name              = params['env']['name']
+var_host_name         = params['env']['hostname']
+
+#-------------------------------------------
+# Check Variables
+#-------------------------------------------
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.network "private_network", ip: "172.28.128.112"
+
+  config.vm.define "chipper" do |db|
+      db.vm.box = var_box_image
+      db.vm.box_url = var_box_url
+      db.vm.hostname = var_name
+
+      db.vm.provider "virtualbox" do |v|
+        #drives = [3,4,5,6]
+        #drives.each do |hd|
+        #  v.customize ['createhd', '--filename', "./asmdisks/asm-disk00#{hd}.vmdk", '--format', "VMDK", '--variant', 'Standard', '--size', 5 * 1025]
+        #  v.customize ['storageattach', :id, '--storagectl', 'SATA Controller', '--port', hd, '--device', 0, '--type', 'hdd', '--medium', "./asmdisks/asm-disk00#{hd}.vmdk"]
+        #end
+
+        v.customize [ "modifyvm", :id, "--memory", 4096 ]
+        v.customize [ "modifyvm", :id, "--cpus", 2 ]
+        v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+        v.customize [ "modifyvm", :id, "--name", var_name ]
+    
+      db.vm.hostname = var_host_name
+      db.vm.network "forwarded_port", guest: 1521, host: 15219
+      db.vm.network "forwarded_port", guest: 5500, host: 55009
+      db.vm.network "forwarded_port", guest: 5901, host: 59019
+
+      db.vm.synced_folder "/Users/bocurtis/Build_Software/zip_files", "/Test_Software"
+
+      # Enable ssh password authentication
+      db.vm.provision "shell", inline: <<-SHELL
+          sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+          /bin/systemctl restart sshd
+        SHELL
+
+      db.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+
+    end
+  end
+end

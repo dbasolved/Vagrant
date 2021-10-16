@@ -1,0 +1,20 @@
+shared:
+    box: ol7-latest
+    url: https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box
+
+env:
+    name: OracleDatabase19c
+    hostname: db19c
+    db_shiphome: LINUX.X64_193000_db_home.zip
+    ora_inventory: /opt/app/oraInventory
+    oracle_base: /opt/app/oracle
+    oracle_home: /opt/app/oracle/product/19.3.0/dbhome_1
+    oracle_sid: 
+    pdb_name: orclpdb
+    oracle_characterset: AL32UTF8
+    oracle_edition: EE
+    oracle_pwd: Welcome1
+    db_version: ORA19c
+    pdb_number: 2
+    grid_home: /opt/app/oracle/product/19.3.0/grid_1
+    grid_shiphome: LINUX.X64_193000_grid_home.zip

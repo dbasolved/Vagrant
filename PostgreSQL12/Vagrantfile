@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+BOX_IMAGE = "ol7-latest"
+BOX_URL = "https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box"
+
+# Name of the VM and the hostname inside
+NAME1 = "PostgreSQL-12"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  #config.vm.network "private_network", type: "dhcp"
+  config.vm.hostname = "PostgreSQL-12"
+
+    config.vm.define "psql" do |psql|
+      psql.vm.network "private_network", :auto_network => true
+      psql.vm.box = BOX_IMAGE
+      psql.vm.box_url = BOX_URL
+      psql.vm.hostname = NAME1
+      
+    # VM Customization
+      psql.vm.provider "virtualbox" do |v|
+        v.customize [ "modifyvm", :id, "--memory", 1024 ]
+        v.customize [ "modifyvm", :id, "--cpus", 1 ]
+        v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+        v.customize [ "modifyvm", :id, "--name", NAME1 ]
+
+      psql.vm.network "forwarded_port", guest: 1521, host: 15213
+      psql.vm.network "forwarded_port", guest: 5901, host: 59013
+      psql.vm.network "forwarded_port", guest: 5432, host: 5432
+
+      psql.vm.synced_folder "/Users/bocurtis/Downloads", "/Test_Software"
+
+      psql.vm.provision "provision_gg", type: "shell", path: "install.sh"
+    end
+  end
+end

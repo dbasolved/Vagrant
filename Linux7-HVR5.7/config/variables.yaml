@@ -1,0 +1,7 @@
+shared:
+    box: ol7-latest
+    url: https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box
+
+env:
+    name: HVR5.7
+    hostname: hvr57

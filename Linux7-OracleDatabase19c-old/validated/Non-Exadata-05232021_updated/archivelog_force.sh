@@ -1,0 +1,21 @@
+#!/bin/sh
+
+export ORACLE_BASE=/u01/app/oracle
+export ORACLE_HOME=/u01/app/oracle/product/19.3.0/dbhome_1
+
+srvctl stop db -d ${ORACLE_NAME}
+
+#connect to database and configure TDE
+${ORACLE_HOME}/bin/sqlplus / as sysdba << EOF
+
+STARTUP MOUNT;
+ALTER DATABASE ARCHIVELOG;
+ALTER DATABASE OPEN;
+ARCHIVE LOG LIST;
+ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+ALTER DATABASE FORCE LOGGING;
+ALTER SYSTEM SWITCH LOGFILE;
+SHUTDOWN IMMEDIATE;
+STARTUP;
+
+EOF

@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+BOX_IMAGE = "ol7-latest"
+BOX_URL = "https://yum.oracle.com/boxes/oraclelinux/latest/ol7-latest.box"
+
+# Name of the VM and the hostname inside
+NAME1 = "TerraformEnterprise"
+
+ENV["LC_ALL"] = "en_US.UTF-8"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  #config.vm.network "private_network", type: "dhcp"
+  config.vm.hostname = "TerraformEnterprise"
+
+    config.vm.define "tfe" do |tfe|
+      tfe.vm.box = BOX_IMAGE
+      tfe.vm.box_url = BOX_URL
+      tfe.vm.hostname = NAME1
+
+    # VM Customization
+    tfe.vm.provider "virtualbox" do |v|
+        v.customize [ "modifyvm", :id, "--memory", 2048 ]
+        v.customize [ "modifyvm", :id, "--cpus", 2 ]
+        v.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+        v.customize [ "modifyvm", :id, "--name", NAME1 ]
+
+      tfe.vm.network "forwarded_port", guest: 8800, host: 8800
+
+      tfe.vm.synced_folder "/Users/bocurtis/Downloads", "/Test_Software"
+
+      tfe.vm.provision "shell", inline: "yum -y install docker"
+      tfe.vm.provision "shell", inline: "curl -o install.sh https://install.terraform.io/ptfe/stable"
+      tfe.vm.provision "shell", inline: "bash ./install.sh no-proxy"
+
+    end
+  end
+end
