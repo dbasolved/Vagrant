@@ -1,0 +1,46 @@
+# vi: set ft=ruby :
+require 'yaml'
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+#-----------------------------------------
+# Variables
+#-----------------------------------------
+params = YAML.load_file './config/variables.yaml'
+
+# Shared
+var_box_image         = params['shared']['box']
+var_name              = params['env']['name']
+var_host_name         = params['env']['hostname']
+
+#-------------------------------------------
+# set virtual machine specific items
+#-------------------------------------------
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.network "public_network", ip: "172.28.128.130"
+  config.vm.network "public_network", type: "bridge"
+
+  config.vm.define "rhel" do |rhel|
+    rhel.vm.box = var_box_image
+    rhel.vm.hostname = var_host_name
+
+    rhel.vm.provider "virtualbox" do |v|
+      v.name = var_name
+      v.memory = 2048
+      v.cpus = 2
+      v.gui = false
+    end
+    
+  # Enable ssh password authentication
+    rhel.vm.provision "shell", inline: <<-SHELL
+      sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config    
+      /bin/systemctl restart sshd
+    SHELL
+
+    rhel.vm.provision "set_passwd", type: "shell", path: "scripts/set_passwd.sh"
+
+  end
+end
