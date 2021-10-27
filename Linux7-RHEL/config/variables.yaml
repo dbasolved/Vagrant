@@ -1,5 +1,0 @@
-shared:
-    box: generic/rhel7
-env:
-    name: RHEL-VM
-    hostname: RHEL-VM

@@ -27,6 +27,7 @@ var_host_name         = params['env']['hostname']
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.network "private_network", ip: "172.28.128.115"
+  config.vm.network "public_network", type: "bridge"
 
   config.vm.define "zdm" do |j|
       j.vm.box = var_box_image
